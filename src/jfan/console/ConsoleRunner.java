@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 
 import jfan.fan.MonitorFAN;
@@ -26,13 +25,8 @@ import jfan.fan.normalizadores.Normalizador;
 import jfan.fan.normalizadores.NormalizadorConfig;
 import jfan.fan.normalizadores.NormalizadoresEnum;
 import jfan.fan.padroes.Padrao;
-import jfan.fan.padroes.PadraoFAN;
-import jfan.fan.temperas.ITemperaSimulada;
-import jfan.fan.temperas.TemperaSimuladaFAN;
 import jfan.io.LeitorPadroes;
-import jfan.io.LeitorRede;
 import jfan.io.PersistorRede;
-import jfan.io.json.LeitorRedeJson;
 import jfan.io.json.PersistorRedeJson;
 import jfan.io.txt.LeitorPadroesArquivoTexto;
 
@@ -42,7 +36,7 @@ public class ConsoleRunner {
 	private static String testSetFile;
 	private static String validationSetFile;
 	private static String outputDirectory;
-	private static String fileSeparator = "  ";
+	private static String fileSeparator = ";";
 	private static int radius = 6;
 	private static int support = 100;
 	private static NormalizadoresEnum normalizatorType = NormalizadoresEnum.MAX;
@@ -52,8 +46,6 @@ public class ConsoleRunner {
 			NumeroCarateristicasIncompativelException,
 			PadraoNaoNormalizadoException {
 		readParameters(args);
-		java.util.Date data = (java.util.Date) Calendar.getInstance().getTime();
-		String nomeArquivo = "" + data.getTime();
 		ArrayList<String> nomesRedes = new ArrayList<String>();
 
 		// 7 - Rodar a rede
@@ -78,8 +70,8 @@ public class ConsoleRunner {
 			System.out.println("Treinando: " + trainingSetFile);
 
 			html.append("<hr><h3>Treinamento "
-					+ trainingSetFile + " (Teste: "
-					+ testSetFile + ")</h3> <br>\n");
+					+ trainingSetFile + " </br>Teste: "
+					+ testSetFile + "</br> Valida&ccedil;&atilde;o: " + validationSetFile + "</h3> <br>\n");
 			conjuntos = new GerenciadorConjuntos();
 			conjuntos.setRaioDifuso(radius);
 			conjuntos.setFuncaoPertinencia(funcaoPertinencia);
@@ -135,21 +127,21 @@ public class ConsoleRunner {
 
 			if (tempo > 59) {
 				tempo = tempo / 60;
-				html.append("<p class='texto'> Épocas: " + c + " Tempo: "
+				html.append("<p class='texto'> &eacute;pocas: " + c + " Tempo: "
 						+ tempo + " min");
 			} else {
-				html.append("<p class='texto'> Épocas: " + c + " Tempo: "
+				html.append("<p class='texto'> &eacute;pocas: " + c + " Tempo: "
 						+ tempo + " seg");
 			}
 			html.append("<table class='texto'>\n");
-			html.append("<tr><td>Melhor Máximo do Mínimo: </td><td>"
+			html.append("<tr><td>Melhor M&aacute;ximo do M&iacute;nimo: </td><td>"
 					+ monitor.getMelhorMaxMin() + "</td></tr>\n");
-			html.append("<tr><td>Melhor Média Harmônica: </td><td>"
+			html.append("<tr><td>Melhor M&eacute;dia Harm&ocirc;nica: </td><td>"
 					+ monitor.getMelhorHarmonica() + "</td></tr>\n");
 
 			html.append("</table>\n");
 
-			//Inicio da validação
+			//Inicio da valida&ccedil;&atilde;o
 				String nomeDatVl = "";
 				nomeDatVl = validationSetFile;
 
@@ -171,39 +163,37 @@ public class ConsoleRunner {
 				MonitorFAN monitorMax = new MonitorFAN(
 						monitor.getRedeMelhorMaxMin());
 
-				// Máximo do Mínimo
+				// M&aacute;ximo do M&iacute;nimo
 				Resultado result = monitorMax.testar(
 						conjuntosVl.getConjuntoValidacao(),
 						monitor.getRedeMelhorMaxMin());
 
 
-				String titulo = "Validação Rede Máximo do Mínimo " + nomeDatVl;
+				String titulo = "Valida&ccedil;&atilde;o Rede M&aacute;ximo do M&iacute;nimo ";
 				html.append(montaHtml(result, titulo));
 
 				MonitorFAN monitorHarm = new MonitorFAN(
 						monitor.getRedeMelhorHarmonica());
-				// Média Harmônica
+				// M&eacute;dia Harm&ocirc;nica
 				result = monitorHarm.testar(conjuntosVl.getConjuntoValidacao(),
 						monitor.getRedeMelhorHarmonica());
 
-				titulo = "Validação Rede Média Harmônica " + nomeDatVl;
+				titulo = "Valida&ccedil;&atilde;o Rede M&eacute;dia Harm&ocirc;nica ";
 				html.append(montaHtml(result, titulo));
 
 				MonitorFAN monitorArit = new MonitorFAN(
 						monitor.getRedeMelhorAritmetica());
-				// Média Aritmética
+				// M&eacute;dia Aritm&eacute;tica
 				result = monitorArit.testar(conjuntosVl.getConjuntoValidacao(),
 						monitor.getRedeMelhorAritmetica());
 
-			//Fim da validação
+			//Fim da valida&ccedil;&atilde;o
 
 			PersistorRede persist = new PersistorRedeJson();
 
-			String redeTrHarmon = outputDirectory + nomeArquivo + "_"
-					+ trainingSetFile + "_Harmonica.json";
+			String redeTrHarmon = outputDirectory + "/FanHarmonica.json";
 			nomesRedes.add(redeTrHarmon);
-			String redeTrMaxMin = outputDirectory + nomeArquivo + "_"
-					+ trainingSetFile + "_MaxMin.json";
+			String redeTrMaxMin = outputDirectory + "/FanMaxMin.json";
 			nomesRedes.add(redeTrMaxMin);
 
 			persist.persistir(monitor.getRedeMelhorHarmonica(),
@@ -215,12 +205,11 @@ public class ConsoleRunner {
 			
 		html.append("</html>");
 
-		FileWriter w = new FileWriter(outputDirectory + nomeArquivo
-				+ "_Resultado.html");
+		FileWriter w = new FileWriter(outputDirectory + "/Resultado.html");
 		w.write(html.toString());
 		w.close();
 
-		// INICIA VALIDAÇÃO DOS TREINAMENTOS
+		// INICIA VALIDA&ccedil;&atilde;O DOS TREINAMENTOS
 		/*if (GERARCLASSIFICACAO) {
 
 			StringBuilder htmlVl = new StringBuilder();
@@ -258,7 +247,7 @@ public class ConsoleRunner {
 
 				int indice = i + 1;
 
-				String titulo = indice + ") Validação ("
+				String titulo = indice + ") Valida&ccedil;&atilde;o ("
 						+ NOME_ARQUIVO_CLASSIFICACAO + ") - Rede: "
 						+ nomesRedes.get(i);
 				htmlVl.append(montaHtmlValidacao(
@@ -268,7 +257,7 @@ public class ConsoleRunner {
 			htmlVl.append("</html>");
 
 			FileWriter wVl = new FileWriter(DIRETORIO + nomeArquivo
-					+ "_Validação.html");
+					+ "_Valida&ccedil;&atilde;o.html");
 			wVl.write(htmlVl.toString());
 			wVl.close();
 		}*/
@@ -299,6 +288,18 @@ public class ConsoleRunner {
 		case "-o":
 			outputDirectory = parameterValue;
 			break;
+		case "-p":
+			fileSeparator = parameterValue;
+			break;
+		case "-r":
+			radius = Integer.parseInt(parameterValue);
+			break;
+		case "-u":
+			support = Integer.parseInt(parameterValue);
+			break;
+		case "-e":
+			epochs = Integer.parseInt(parameterValue);
+			break;
 		}
 
 	}
@@ -308,9 +309,9 @@ public class ConsoleRunner {
 		NumberFormat pr = NumberFormat.getPercentInstance(new Locale("pt-br"));
 		pr.setMaximumFractionDigits(2);
 
-		int truePositives = matrix[1][1]; // fraudeApontadaComoFraude
-		int falsePositives = matrix[1][0]; // fraudeApontadaComoNormal
-		int falseNegatives = matrix[0][1]; // normalApontadaComoFraude
+		int truePositives = matrix[1][1];
+		int falsePositives = matrix[1][0];
+		int falseNegatives = matrix[0][1];
 
 		double precision = Metricas.precision(truePositives, falsePositives);
 		double recall = Metricas.recall(truePositives, falseNegatives);
@@ -319,7 +320,7 @@ public class ConsoleRunner {
 
 		StringBuilder html = new StringBuilder();
 		html.append("<br><table width='100px'  class='texto' border='1' cellspacing='0' cellpading='0'>\n");
-		html.append("<tr><td colspan='2' align='center' nowrap><b>Métricas</b></tr>\n");
+		html.append("<tr><td colspan='2' align='center' nowrap><b>M&eacute;tricas</b></tr>\n");
 		html.append("<tr><td align='center' nowrap><b>Precison</td><td align='center'>"
 				+ pr.format(precision) + "</td></tr>\n");
 		html.append("<tr><td align='center' nowrap><b>Recall</td><td align='center'>"
@@ -338,11 +339,11 @@ public class ConsoleRunner {
 		StringBuilder html = new StringBuilder();
 		html.append("<p><b> " + titulo + "</b></p>\n");
 		html.append("<table>\n");
-		html.append("<tr><td class='texto'>Máximo do Mínimo: </td><td class='texto'>"
+		html.append("<tr><td class='texto'>M&aacute;ximo do M&iacute;nimo: </td><td class='texto'>"
 				+ result.getAcertoMaxMin() + "</td></tr>\n");
-		html.append("<tr><td class='texto'>Média Harmônica: </td><td class='texto'>"
+		html.append("<tr><td class='texto'>M&eacute;dia Harm&ocirc;nica: </td><td class='texto'>"
 				+ result.getAcertoHarmonico() + "</td></tr>\n");
-		// html.append("<tr><td class='texto'>Média Aritmética: </td><td class='texto'>"+result.getAcertoArimetico()+"</td></tr>\n");
+		// html.append("<tr><td class='texto'>M&eacute;dia Aritm&eacute;tica: </td><td class='texto'>"+result.getAcertoArimetico()+"</td></tr>\n");
 		html.append("</table>\n");
 
 		int[][] matrix = result.getMatrizConfusao();
@@ -356,7 +357,7 @@ public class ConsoleRunner {
 		html.append(montarMetricasHtml(matrixRevert));
 
 		html.append("<table width='300px'  class='texto' border='1' cellspacing='0' cellpading='0'>\n");
-		html.append("<tr><td align='center'><b>Matriz de Confusão </b></td><td align='center'><b>0</td><td align='center'><b>1</td></tr>\n");
+		html.append("<tr><td align='center'><b>Matriz de Confus&atilde;o </b></td><td align='center'><b>0</td><td align='center'><b>1</td></tr>\n");
 		html.append("<tr><td align='center'><b>0</td><td align='center'>"
 				+ matrix[0][0] + "</td><td align='center'>" + matrix[0][1]
 				+ "</td></tr>\n");
@@ -403,11 +404,11 @@ public class ConsoleRunner {
 
 		html.append("<p><b> " + titulo + "</b></p>\n");
 
-		// Métricas
+		// M&eacute;tricas
 		html.append(montarMetricasHtml(matrixQtde));
 
 		html.append("<table width='300px'  class='texto' border='1' cellspacing='0' cellpading='0'>\n");
-		html.append("<tr><td align='center' nowrap><b>Matriz de Confusão Quantidade</b></td><td align='center' nowrap><b>Normal Rede</td><td align='center' nowrap><b>Fraude Rede</td></tr>\n");
+		html.append("<tr><td align='center' nowrap><b>Matriz de Confus&atilde;o Quantidade</b></td><td align='center' nowrap><b>Normal Rede</td><td align='center' nowrap><b>Fraude Rede</td></tr>\n");
 		html.append("<tr><td align='center' nowrap><b>0 Real</td><td align='center'>"
 				+ matrixQtde[0][0]
 				+ "</td><td align='center'>"
@@ -419,7 +420,7 @@ public class ConsoleRunner {
 		html.append("</table>\n");
 
 		html.append("<br><br><table width='300px'  class='texto' border='1' cellspacing='0' cellpading='0'>\n");
-		html.append("<tr><td align='center' nowrap><b>Matriz de Confusão Porcentagem</b></td><td align='center' nowrap><b>Normal Rede</td><td align='center' nowrap><b>Fraude Rede</td></tr>\n");
+		html.append("<tr><td align='center' nowrap><b>Matriz de Confus&atilde;o Porcentagem</b></td><td align='center' nowrap><b>Normal Rede</td><td align='center' nowrap><b>Fraude Rede</td></tr>\n");
 		html.append("<tr><td align='center' nowrap><b>0 Real</td><td align='center'>"
 				+ pr.format(matrixQtde[0][0] * 1.0
 						/ (matrixQtde[0][0] + matrixQtde[0][1]))
